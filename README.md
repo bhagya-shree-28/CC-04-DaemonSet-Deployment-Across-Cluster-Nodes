@@ -93,8 +93,43 @@ Verify the cluster before starting:
 ```powershell
 kubectl get nodes
 ```
+### 5.1 Creating the 3-Node kind Cluster
+
+Run these once, before creating the DaemonSet.
+
+**Cluster config file — `kind-config.yaml`**
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+- role: worker
+- role: worker
+```
+```
+`kind create cluster --config kind-config.yaml`
+Creates the 3-node cluster. With no `--name`, the cluster is called `kind`, so the nodes are named `kind-control-plane`, `kind-worker` and `kind-worker2` 
+`kind get clusters`
+Lists kind clusters; should show `kind` 
+```
+Verify the cluster before starting:
+
+```powershell
+kubectl get nodes
+```
+
+Expected output (exactly three nodes):
+
+```
+NAME                 STATUS   ROLES           AGE   VERSION
+kind-control-plane   Ready    control-plane   11d   v1.37.0
+kind-worker          Ready    <none>          11d   v1.37.0
+kind-worker2         Ready    <none>          11d   v1.37.0
+```
 
 ---
+
 
 ## 6. Implementation Steps
 
@@ -498,6 +533,10 @@ A DaemonSet deployed on a two-worker kind cluster scheduled **exactly one Fluent
 
 | Command | Purpose |
 |---|---|
+| `@" ... "@ \| Out-File -Encoding utf8 kind-config.yaml` | Writes the cluster config above (1 control-plane + 2 workers) to a file |
+| `kind create cluster --config kind-config.yaml` | Creates the 3-node cluster. With no `--name`, the cluster is called `kind`, so the nodes are named `kind-control-plane`, `kind-worker` and `kind-worker2` |
+| `kind get clusters` | Lists kind clusters; should show `kind` |
+| `kubectl cluster-info --context kind-kind` | Confirms kubectl is pointed at the new cluster and the API server is reachable |
 | `@" ... "@ \| Out-File -Encoding utf8 log-agent-ds.yaml` | PowerShell here-string that writes the YAML manifest to a file with UTF-8 encoding |
 | `kubectl get nodes` | Lists cluster nodes with their status (`Ready`, `SchedulingDisabled`), roles and version | 
 | `kubectl apply -f log-agent-ds.yaml` | Creates the DaemonSet, or updates it if it already exists (`created` / `configured`) | 
