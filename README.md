@@ -71,7 +71,7 @@ In a kind cluster the control-plane node carries the taint `node-role.kubernetes
 |---|---|
 | Cluster | kind (Kubernetes in Docker), 1 control-plane + 2 workers |
 | Nodes | `kind-control-plane`, `kind-worker`, `kind-worker2` |
-| Kubernetes version | v1.37.0 (as reported by `kubectl get nodes`) |
+| Kubernetes version | v1.37.0  |
 | Host shell | Windows PowerShell |
 | Working directory | `C:\Users\anany\k8s-lab` |
 | DaemonSet name | `log-collector` |
