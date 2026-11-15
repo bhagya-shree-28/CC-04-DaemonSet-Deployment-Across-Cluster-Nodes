@@ -15,6 +15,7 @@
 9. [Optional Extension: Node Added / Removed](#9-optional-extension-node-added--removed)
 10. [Cleanup](#10-cleanup)
 11. [Conclusion](#11-conclusion)
+12. [Command reference](#12-command-reference)
 
 ---
 
@@ -414,28 +415,6 @@ log-collector-wmpvv   1/1     Running   10.244.2.21   kind-worker2
 
 ---
 
-###  Command Reference
-
-All commands used in this experiment and what each one does:
-
-| Command | Purpose | Used in |
-|---|---|---|
-| `@" ... "@ \| Out-File -Encoding utf8 log-agent-ds.yaml` | PowerShell here-string that writes the YAML manifest to a file with UTF-8 encoding | Steps 1-4 |
-| `kubectl get nodes` | Lists cluster nodes with their status (`Ready`, `SchedulingDisabled`), roles and version | Prerequisites, Steps 6-7 |
-| `kubectl apply -f log-agent-ds.yaml` | Creates the DaemonSet, or updates it if it already exists (`created` / `configured`) | Steps 1-4 |
-| `kubectl get daemonset` | Shows `DESIRED`, `CURRENT`, `READY`, `UP-TO-DATE`, `AVAILABLE` and `NODE SELECTOR` for the DaemonSet | Steps 1-4, 7 |
-| `kubectl get pods -o wide` | Lists pods with extra detail: pod IP and the node each pod runs on, which is how one pod per node is verified | Steps 1-7 |
-| `kubectl delete deployment web` | Deletes the earlier `web` Deployment so only DaemonSet pods remain in the output | Step 1 |
-| `kubectl label node kind-worker monitoring=enabled` | Adds a label to a node so a `nodeSelector` can match it | Step 2 |
-| `kubectl label node kind-worker monitoring-` | Removes the label from the node (the trailing `-` means remove) | Step 3 |
-| `kubectl taint nodes kind-worker2 dedicated=gpu:NoExecute` | Taints a node so pods without a matching toleration are not scheduled there, and existing ones are evicted | Step 3 |
-| `kubectl taint nodes kind-worker2 dedicated=gpu:NoExecute-` | Removes the taint from the node | Step 5 |
-| `kubectl cordon kind-worker2` | Marks the node unschedulable (`SchedulingDisabled`) for normal workloads; running pods are not touched | Step 6 |
-| `kubectl delete pod -l app=log-collector --field-selector spec.nodeName=kind-worker2` | Deletes only the `log-collector` pod on `kind-worker2` (label filter plus node filter) to test whether the DaemonSet recreates it | Step 6 |
-| `kubectl uncordon kind-worker2` | Makes the node schedulable again | Step 7 |
-
----
-
 ## 7. Results Summary
 
 | # | Scenario | Node configuration | `DESIRED` | Pods running on | Result |
@@ -514,5 +493,23 @@ kubectl uncordon kind-worker2                          # only if still cordoned
 A DaemonSet deployed on a two-worker kind cluster scheduled **exactly one Fluent Bit pod per worker node** with no replica configuration. The experiment showed how placement is controlled: a **`nodeSelector`** limited the agent to labelled nodes, a **taint** excluded a node until a matching **toleration** was added, and a **cordon** did not stop the DaemonSet from keeping its pod on a node. These behaviours are why DaemonSets are the standard way to run logging, monitoring and networking agents across a cluster.
 
 ---
+### 12. Command Reference
 
+
+| Command | Purpose |
+|---|---|
+| `@" ... "@ \| Out-File -Encoding utf8 log-agent-ds.yaml` | PowerShell here-string that writes the YAML manifest to a file with UTF-8 encoding |
+| `kubectl get nodes` | Lists cluster nodes with their status (`Ready`, `SchedulingDisabled`), roles and version | 
+| `kubectl apply -f log-agent-ds.yaml` | Creates the DaemonSet, or updates it if it already exists (`created` / `configured`) | 
+| `kubectl get daemonset` | Shows `DESIRED`, `CURRENT`, `READY`, `UP-TO-DATE`, `AVAILABLE` and `NODE SELECTOR` for the DaemonSet |
+| `kubectl get pods -o wide` | Lists pods with extra detail: pod IP and the node each pod runs on, which is how one pod per node is verified | 
+| `kubectl label node kind-worker monitoring=enabled` | Adds a label to a node so a `nodeSelector` can match it |
+| `kubectl label node kind-worker monitoring-` | Removes the label from the node (the trailing `-` means remove) | 
+| `kubectl taint nodes kind-worker2 dedicated=gpu:NoExecute` | Taints a node so pods without a matching toleration are not scheduled there, and existing ones are evicted | 
+| `kubectl taint nodes kind-worker2 dedicated=gpu:NoExecute-` | Removes the taint from the node |
+| `kubectl cordon kind-worker2` | Marks the node unschedulable (`SchedulingDisabled`) for normal workloads; running pods are not touched | 
+| `kubectl delete pod -l app=log-collector --field-selector spec.nodeName=kind-worker2` | Deletes only the `log-collector` pod on `kind-worker2` (label filter plus node filter) to test whether the DaemonSet recreates it | 
+| `kubectl uncordon kind-worker2` | Makes the node schedulable again |
+
+---
 
